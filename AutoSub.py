@@ -56,7 +56,7 @@ def main(argv=None):
         argv = sys.argv
     try:
         try:
-            opts, args= getopt.getopt(argv[1:], "hc:dl", ["help","config=","daemon","nolaunch"])
+            opts, args= getopt.getopt(argv[1:], "hc:dlu:", ["help","config=","daemon","nolaunch","updated="])
         except getopt.error, msg:
             raise Usage(msg)
     
@@ -78,6 +78,10 @@ def main(argv=None):
                     # TODO: Service support for Windows
                 else:
                     autosub.DAEMON = True
+            if option in ("-u"):
+                UpdateCount = int(value)
+            else:
+                UpdateCount = 0
     
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
@@ -110,11 +114,14 @@ def main(argv=None):
         os._exit(1)
     
     print "AutoSub: Starting output to log. Bye!"
+    autosub.UPDATECOUNT = UpdateCount
+
     log = autosub.initLogging(autosub.LOGFILE)
     log.debug("AutoSub: Systemencoding is: %s" %autosub.SYSENCODING)
     log.debug("AutoSub: Configversion is: %d" %autosub.CONFIGVERSION)
     log.debug("AutoSub: Dbversion is: %d" %autosub.DBVERSION)
-    
+    if autosub.UPDATECOUNT != 0 :
+        log.debug('AutoSub: Started after Update. Update count is %s' % autosub.UPDATECOUNT)    
     log.info("AutoSub: Starting threads")
     autosub.AutoSub.start()
     

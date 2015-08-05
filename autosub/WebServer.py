@@ -191,10 +191,10 @@ class Config:
         return str(tmpl)
 
     @cherrypy.expose
-    def saveNotification(self, notifymail, notifygrowl, notifynma, notifytwitter, mailsrv, mailfromaddr, mailtoaddr, 
-                         mailusername, mailpassword, mailsubject, mailencryption, mailauth, growlhost, growlport, 
-                         growlpass, nmaapi, twitterkey, twittersecret, notifyprowl, prowlapi, prowlpriority, 
-                         notifypushalot, pushalotapi, notifypushbullet, pushbulletapi, notifypushover, pushoverapi, 
+    def saveNotification(self, notifymail, notifygrowl, notifynma, notifytwitter, mailsrv, mailfromaddr, 
+                         mailtoaddr, mailusername, mailpassword, mailsubject, mailencryption, mailauth, 
+                         growlhost, growlport, growlpass, nmaapi, twitterkey, twittersecret, notifyprowl, 
+                         prowlapi, prowlpriority, notifypushalot, pushalotapi, notifypushover, pushoverapi, 
                          nmapriority, notifyboxcar2, boxcar2token, notifyplex, plexserverhost, plexserverport):
 
         # Set all internal notify variables
@@ -222,8 +222,6 @@ class Config:
         autosub.PROWLPRIORITY = int(prowlpriority)
         autosub.NOTIFYPUSHALOT = notifypushalot
         autosub.PUSHALOTAPI = pushalotapi
-        autosub.NOTIFYPUSHBULLET = notifypushbullet
-        autosub.PUSHBULLETAPI = pushbulletapi
         autosub.NOTIFYPUSHOVER = notifypushover
         autosub.PUSHOVERAPI = pushoverapi
         autosub.NOTIFYBOXCAR2 = notifyboxcar2
@@ -284,7 +282,17 @@ class Config:
         tmpl.modalheader = "Information"
         
         return str(tmpl)   
-    
+
+    @cherrypy.expose
+    def UpdateAutoSub(self):
+        message = autosub.Helpers.UpdateAutoSub()    
+
+        tmpl = PageTemplate(file="interface/templates/home.tmpl")
+        tmpl.message = message
+        tmpl.displaymessage = "Yes"
+        tmpl.modalheader = "Information"
+        return str(tmpl)
+
     @cherrypy.expose
     def testPushalot(self, pushalotapi):
         
@@ -294,16 +302,6 @@ class Config:
             return "Auto-Sub successfully sent a test message with <strong>Pushalot</strong>."
         else:
             return "Failed to send a test message with <strong>Pushalot</strong>."
-
-    @cherrypy.expose
-    def testPushbullet(self, pushbulletapi):
-        
-        log.info("Notification: Testing Pushbullet")
-        result = notify.pushbullet.test_notify(pushbulletapi)
-        if result:
-            return "Auto-Sub successfully sent a test message with <strong>Pushbullet</strong>."
-        else:
-            return "Failed to send a test message with <strong>Pushbullet</strong>."
     
     @cherrypy.expose
     def testMail(self, mailsrv, mailfromaddr, mailtoaddr, mailusername, mailpassword, mailsubject, mailencryption, mailauth):  

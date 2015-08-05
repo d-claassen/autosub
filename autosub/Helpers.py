@@ -2,7 +2,7 @@
 #
 # The Autosub helper functions
 #
-
+import zipfile, StringIO, shutil,urllib,filecmp
 import logging
 import re
 import subprocess
@@ -10,7 +10,7 @@ from string import capwords
 import time
 import urllib2
 import codecs
-import os
+import os,sys
 from ast import literal_eval
 
 from library import version
@@ -93,6 +93,109 @@ def CheckVersion():
     elif release < running_release: #Alpha < Beta
         if versionnumber > running_versionnumber: #0.5.6 > 0.5.5
             return 3        
+
+def UpdateAutoSub():
+    '''
+    Update Autosub.
+    return message for user.
+    '''
+    if autosub.UPDATECOUNT > 0:
+        log.debug('UpdateAutoSub: Autosub is updated. Updatecount is %d' % autosub.UPDATECOUNT)
+        Message = 'Update succesfull. ' + str(autosub.UPDATECOUNT) + ' files updated.'
+        autosub.UPDATECOUNT = 0
+        return Message
+    if autosub.WANTEDQUEUELOCK:
+        return 'Scandisk or CheckSub is busy, please try again later'
+    autosub.WANTEDQUEUELOCK == True
+
+    #Piece of Code to let you test the reboot of autosub after an update, without actually updating anything
+    RestartTest = False
+    if RestartTest:
+        log.debug('UpdateAutoSub: Module is in restart Test mode')
+        args = sys.argv[:]
+        args.insert(0, sys.executable)
+        if sys.platform == 'win32':
+            args = ['"%s"' % arg for arg in args]
+        autosub.UPDATECOUNT = 9
+        args.append('-u' + str(autosub.UPDATECOUNT))
+        log.debug('UpdateAutoSub: Python exec arguments are %s,  %s' %(sys.executable,args))
+        os.execv(sys.executable, args)
+
+    #First we make a connection to github to get the zipfile with the release
+    log.info('Starting upgrade.')
+    try:
+        ZipData = urllib.urlopen(autosub.ZIPURL).read()
+    except Exception as error:
+        log.error('UpdateAutoSub: Could not connect to github. Error is %s' % error)
+        return error
+
+    # exstract the zipfile to the autosub root directory
+    try:
+        zf  = zipfile.ZipFile(StringIO.StringIO(ZipData))
+        zf.extractall(autosub.PATH)
+    except Exception as error:
+        log.error('UpdateAutoSub: Problem extracting zipfile from github. Error is %s' % error)
+        return error
+
+    #Get the rootname from the zipfile
+    ZipRoot = zf.namelist()[0][:-1]
+    zf.close()
+    ReleasePath = autosub.PATH + os.sep + ZipRoot
+    FileCount = 0
+
+    # walk through the directories and compare the files to find differnces
+    for Root, Dirs, Files in os.walk(ReleasePath):
+        # Constructing the TargetDir by removing the ZipRoot from the path
+        TargetDir = Root.replace(os.sep + ZipRoot,'')
+        # If Targetdir does not exists create it.
+        if not os.path.isdir(TargetDir):
+            try:
+                os.makedirs(TargetDir)
+            except Exception as error:
+                log.error('UpdateAutoSub: Problem creating directories. Error is %s' % error)
+                return error
+        for File in Files:
+            if File == '.gitignore':
+                continue
+            SrcFile = Root + os.sep + File
+            TargetFile = TargetDir + os.sep + File
+            # If the Targetfile exists compare it with the one from the zipfile
+            if os.path.isfile(TargetFile):
+                if filecmp.cmp(SrcFile,TargetFile):
+                    continue
+                else:
+                # When they are not equal we remove the old file.
+                    try:
+                        os.remove(TargetFile)
+                    except Exception as error:
+                        log.error('UpdateAutoSub: Problem removing old file. Error is %s' % error)
+                        return error
+            # there was a difference between the files or the file did not exists so we place a new file
+            try:
+                shutil.move(SrcFile,TargetFile)
+                FileCount = FileCount + 1
+                log.info('UpdateAutoSub: Placed file %s' % TargetFile)
+            except Exception as error:
+                log.error('UpdateAutoSub: Problem placing new file. Error is %s' % error)
+                return error
+    try:
+        shutil.rmtree(ReleasePath)
+    except Exception as error:
+        log.error('UpdateAutoSub: Problem removing release files. Error is %s' % error)
+        return error
+    if FileCount > 0 :
+        args = sys.argv[:]
+        args.insert(0, sys.executable)
+        if sys.platform == 'win32':
+            args = ['"%s"' % arg for arg in args]
+        autosub.UPDATECOUNT = FileCount
+        args.append('-u' + str(autosub.UPDATECOUNT))
+        log.info('UpdateAutoSub: %d files updated. Now restarting autosub...' % FileCount)
+        log.debug('UpdateAutoSub: Python exec arguments are %s,  %s' %(sys.executable,args))
+        os.execv(sys.executable, args)
+    else:
+        Message = 'Update successfull but there were no new files available'
+    return Message
 
 def CleanSerieName(series_name):
     """Clean up series name by removing any . and _
