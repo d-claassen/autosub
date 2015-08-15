@@ -126,16 +126,16 @@ def UpdateAutoSub():
     try:
         ZipData = urllib.urlopen(autosub.ZIPURL).read()
     except Exception as error:
-        log.error('UpdateAutoSub: Could not connect to github. Error is %s' % error)
-        return error
+        log.error('UpdateAutoSub: Could not connect to github. Error is %s' % error.strerror)
+        return error.strerror
 
     # exstract the zipfile to the autosub root directory
     try:
         zf  = zipfile.ZipFile(StringIO.StringIO(ZipData))
         zf.extractall(autosub.PATH)
     except Exception as error:
-        log.error('UpdateAutoSub: Problem extracting zipfile from github. Error is %s' % error)
-        return error
+        log.error('UpdateAutoSub: Problem extracting zipfile from github. Error is %s' % error.strerror)
+        return error.strerror
 
     #Get the rootname from the zipfile
     ZipRoot = zf.namelist()[0][:-1]
@@ -152,8 +152,8 @@ def UpdateAutoSub():
             try:
                 os.makedirs(TargetDir)
             except Exception as error:
-                log.error('UpdateAutoSub: Problem creating directories. Error is %s' % error)
-                return error
+                log.error('UpdateAutoSub: Problem creating directories. Error is %s' % error.strerror)
+                return error.strerror
         for File in Files:
             if File == '.gitignore':
                 continue
@@ -168,21 +168,21 @@ def UpdateAutoSub():
                     try:
                         os.remove(TargetFile)
                     except Exception as error:
-                        log.error('UpdateAutoSub: Problem removing old file. Error is %s' % error)
-                        return error
+                        log.error('UpdateAutoSub: Problem removing old file. Error is %s' % error.strerror)
+                        return error.strerror
             # there was a difference between the files or the file did not exists so we place a new file
             try:
                 shutil.move(SrcFile,TargetFile)
                 FileCount = FileCount + 1
                 log.info('UpdateAutoSub: Placed file %s' % TargetFile)
             except Exception as error:
-                log.error('UpdateAutoSub: Problem placing new file. Error is %s' % error)
-                return error
+                log.error('UpdateAutoSub: Problem placing new file. Error is %s' % error.strerror)
+                return error.strerror
     try:
         shutil.rmtree(ReleasePath)
     except Exception as error:
-        log.error('UpdateAutoSub: Problem removing release files. Error is %s' % error)
-        return error
+        log.error('UpdateAutoSub: Problem removing release files. Error is %s' % error.strerror)
+        return error.strerror
     if FileCount > 0 :
         args = sys.argv[:]
         args.insert(0, sys.executable)
