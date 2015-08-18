@@ -28,7 +28,8 @@ log = logging.getLogger('thelogger')
 
 _show = [re.compile('(.+)\s+\(?(\d{4})\)?', re.IGNORECASE),
               re.compile('(.+)\s+\(?(us)\)?', re.IGNORECASE),
-              re.compile('(.+)\s+\(?(uk)\)?', re.IGNORECASE)]
+              re.compile('(.+)\s+\(?(uk)\)?', re.IGNORECASE),
+              re.compile('(.+)\s+\(?(bbc)\)?', re.IGNORECASE)]
 
 
 _source = [re.compile("(ahdtv|hdtv|web[. _-]*dl|blu[. _-]*ray|dvdrip|web[-]*rip|hddvd)", re.IGNORECASE),
@@ -37,6 +38,7 @@ _source = [re.compile("(ahdtv|hdtv|web[. _-]*dl|blu[. _-]*ray|dvdrip|web[-]*rip|
 #A dictionary containing as keys, the nonstandard naming. Followed by there standard naming.
 #Very important!!! Should be unicode and all LOWERCASE!!!
 _source_syn = {u'ahdtv'  : u'hdtv',
+               u'hd_tv'  : u'hdtv',
                u'dvd'    : u'dvdrip',
                u'bdrip'  : u'bluray',
                u'blu-ray': u'bluray',
@@ -57,8 +59,8 @@ _quality_syn = {u'1080'  : u'1080p',
 _codec = [re.compile("([xh]*264|xvid|dvix)" , re.IGNORECASE)]
 
 #Note: x264 is the opensource implementation of h264.
-_codec_syn = {u'x264' : u'h264',
-             u'264' : u'h264'}
+_codec_syn = {u'x264': u'h264',
+              u'264' : u'h264'}
 
 #The following 2 variables create the regex used for guessing the releasegrp. Functions should not call them!
 _rlsgrps_rest = ['0TV',
@@ -129,6 +131,7 @@ _rlsgrps_HD =  ['0SEC',
                 'PublicHD',
                 'REMARKABLE']
 
+
 _rlsgrps_SD =  ['ASAP',
                 'AVS',
                 'BiA',
@@ -152,11 +155,13 @@ _rlsgrps_webdl=['BS',
                 'ECI',
                 'FUM',
                 'HWD',
+                'Juggalotus',
                 'KiNGS',
                 'NFHD',
                 'NTb',
                 'PCSYNDICATE',
                 'POD',
+                'QUEENS',
                 'TVSmash',
                 'YFN']
 
@@ -463,7 +468,7 @@ class Addic7edAPI():
     def __init__(self):
         self.session = requests.Session()
         self.server = 'http://www.addic7ed.com'
-        self.session.headers = {'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13', 'Referer' : 'http://www.addic7ed.com', 'Pragma': 'no-cache'}
+        self.session.headers = {'User-Agent': 'Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0;  rv:11.0) like Gecko', 'Referer' : 'http://www.addic7ed.com', 'Pragma': 'no-cache'}
         self.logged_in = False
                 
     def login(self, addic7eduser=None, addic7edpasswd=None):        
@@ -513,13 +518,13 @@ class Addic7edAPI():
         """
         Make a GET request on `url`
         :param string url: part of the URL to reach with the leading slash
-        :rtype: text
+        :rtype: : text
         """
         if not self.logged_in and login:
             log.error("Addic7edAPI: You are not properly logged in. Check your credentials!")
             return None
         try:
-            r = self.session.get(self.server + url, timeout=15)
+            r = self.session.get(self.server + url, timeout=10)
         except requests.Timeout:
             log.error('Addic7edAPI: Timeout after 15 seconds')
             return None
@@ -589,61 +594,49 @@ class Addic7edAPI():
         return True    
     
     def geta7ID(self,TvdbShowName, localShowName):
-        # Last resort: lookup official name and try to match with a7 show list
 
-        show_ids={}
         html = self.get('/shows.php', login=False)
         if not html:
+            log.debug('geta7ID: Could not get the show page form the addic7ed website')
             return None
-        show_ids = dict(url.split("\">") for url in re.findall(r'<a href=[\'"]/show/?([^<]+)', html))
 
-        #----------------------------------------------------------------#
-        # changed the beautifull soup call to a simpel regex             #
-        # beautifull soup takes alsmost 20 seconds to process this page. #
-        #----------------------------------------------------------------#
+        #Put the showname's and Addic7ed's in a dict with the showname as key.
+        show_ids={}
+        for url in re.findall(r'<a href=[\'"]/show/?([^<]+)', html):
+            show_ids[url.split("\">")[1]] = url.split("\">")[0]
 
-        #try:
-        #    soup = self.get('/shows.php', login=False)
-        #    for html_show in soup.select('td.version > h3 > a[href^="/show/"]'):
-        #        show_ids[html_show.string.lower()] = int(html_show['href'][6:]) 
-        #except:
-        #    log.error('geta7IDApi: failed to retrieve a7 show list')
-        #    return None
-        
-        
-        # First clip of year or US, UK from the name
-        show_regex = [re.compile('(.+)\s+\(?(\d{4})\)?', re.IGNORECASE),
-                      re.compile('(.+)\s+\(?(us)\)?', re.IGNORECASE),
-                      re.compile('(.+)\s+\(?(uk)\)?', re.IGNORECASE)]
+        # here we make a list of possible combinatioen of names and suffixes
+        SearchList = []
+        #First the Tvdb show name from the parameterlist 
+        SearchList.append(TvdbShowName)
 
+        # If there is a suffix add the combinations of suffixes e.g. with and without ()
+        SearchName, Suffix = _getShow(TvdbShowName)
+        if Suffix:
+            SearchList.append(SearchName)
+            if '(' + Suffix +')' in TvdbShowName:
+                SearchList.append(SearchName + ' ' + Suffix)
+            else:
+                SearchList.append(SearchName + '(' + Suffix + ')')
 
-        searchName_off, suffix_off = _getShow(TvdbShowName)
-        for Id, show in show_ids.iteritems():
-            # First try it with the official show name from TvDB
-            m = re.match('%s(.*)' % searchName_off, show, re.I)
-            if m:
-                # Get False-Positive UK titles out; assumes UK is always indicated
-                if not re.search('UK', suffix_off, re.I) and re.search('UK', m.group(1), re.I):
-                    continue
-                if len(searchName_off) < len(show):
-                    log.debug("geta7IDApi: Skipping %s because we found a just a partial match for %s" %(show,TvdbShowName))
-                    continue
-                a7_id = Id
-                log.debug("geta7IDApi: Addic7ed ID %s found using the official show name %s" %(a7_id, TvdbShowName))
-                return a7_id
-            # If the official show name is different try also the one from the episode file
-            if localShowName != TvdbShowName:
-                searchName_local, suffix_local = _getShow(localShowName)
-                n = re.match('%s(.*)' % searchName_local, show, re.I)
-                if n:
-                    # Get False-Positive UK titles out; assumes UK is always indicated
-                    if not re.search('UK', suffix_local, re.I) and re.search('UK', n.group(1), re.I):
-                        continue
-                    if len(searchName_local) < len(show):
-                        log.debug("geta7IDApi: Skipping %s because we found a just a partial match for %s" %(show,localShowName))
-                        continue
-                    a7_id = Id
-                    log.debug("geta7IDApi: Addic7ed ID %s found using filename show name %s" % (a7_id, localShowName))
-                    return a7_id
+        # If the local show name is different the we do the same for that name
+        if TvdbShowName != localShowName:
+            if localShowName not in SearchList:
+                SearchList.append(localShowName)
+            SearchName, Suffix = _getShow(localShowName)
+            if Suffix:
+                if SearchName not in SearchList:
+                    SearchList.append(SearchName)
+                if '(' + Suffix +')' in localShowName :
+                    SearchList.append(SearchName + ' ' + Suffix)
+                else:
+                    SearchList.append(SearchName + ' (' + Suffix + ')')
 
+        # Try all the combinations untill we find one
+        for Name in SearchList:
+            if Name in show_ids:
+                log.debug("geta7IDApi: Addic7ed ID %s found using filename show name %s" % (show_ids[Name], localShowName))
+                return show_ids[Name]
+
+        log.info('geta7ID: The show %s could not be found on the Addic7ed website.' % localShowName)
         return None

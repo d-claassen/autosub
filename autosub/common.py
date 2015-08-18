@@ -26,6 +26,7 @@ source = [re.compile("(ahdtv|hdtv|web[. _-]*dl|blu[. _-]*ray|dvdrip|web[-]*rip|h
 #A dictionary containing as keys, the nonstandard naming. Followed by there standard naming.
 #Very important!!! Should be unicode and all LOWERCASE!!!
 source_syn = {u'ahdtv'  : u'hdtv',
+              u'hd_tv'  : u'hdtv',
               u'dvd'    : u'dvdrip',
               u'bdrip'  : u'bluray',
               u'blu-ray': u'bluray',
@@ -45,18 +46,17 @@ quality_syn = {u'1080' : u'1080p',
 #If the quality regex fails, ProcessFile will look in this dictionary. If the fileextension
 #is not here, it will guess that the quality is SD. 
 quality_fileext = {u'.mkv' : u'720p',
-                   u'.mp4' : u'sd',
                    u'.avi' : u'sd'}
 
 codec = [re.compile("([xh]*264|xvid|dvix)" , re.IGNORECASE)]
 
 #Note: x264 is the opensource implementation of h264.
-codec_syn = {u'x264' : u'h264',
-             u'264'  : u'h264'}
+codec_syn = {u'x264': u'h264',
+             u'264' : u'h264'}
 
-codec_fileext = {u'.mkv' : u'h264',
-                 u'.mp4' : u'h264',
-                 u'.avi' : u'xvid'}
+codec_fileext = {u'.mkv'   : u'h264',
+                   u'.mp4' : u'h264',
+                   u'.avi' : u'xvid'}
 
 #The following 2 variables create the regex used for guessing the releasegrp. Functions should not call them!
 _releasegrps = ['0TV',
@@ -95,6 +95,7 @@ _releasegrps = ['0TV',
                 'HWD',
                 'Hype',
                 'IMMERSE',
+                'Juggalotus',
                 'KILLERS',
                 'KiNGS',
                 'KYR',
@@ -120,6 +121,7 @@ _releasegrps = ['0TV',
                 'playXD',
                 'POD',
                 'PUBLICHD',
+                'QUEENS',
                 'RANDi',
                 'REMARKABLE',
                 'RRH',
