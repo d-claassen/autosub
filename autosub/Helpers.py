@@ -128,15 +128,15 @@ def UpdateAutoSub():
         ZipData = urllib.urlopen(autosub.ZIPURL).read()
     except Exception as error:
         log.error('UpdateAutoSub: Could not connect to github. Error is %s' % error.strerror)
-        return error
+        return error.strerror
 
     # exstract the zipfile to the autosub root directory
     try:
         zf  = zipfile.ZipFile(StringIO.StringIO(ZipData))
         zf.extractall(autosub.PATH)
     except Exception as error:
-        log.error('UpdateAutoSub: Problem extracting zipfile from github. Error is %s' % error)
-        return error
+        log.error('UpdateAutoSub: Problem extracting zipfile from github. Error is %s' % error.strerror)
+        return error.strerror
 
     #Get the rootname from the zipfile
     ZipRoot = zf.namelist()[0][:-1]
@@ -154,7 +154,7 @@ def UpdateAutoSub():
                 os.makedirs(TargetDir)
             except Exception as error:
                 log.error('UpdateAutoSub: Problem creating directories. Error is %s' % error.strerror)
-                return error
+                return error.strerror
         for File in Files:
             if File == '.gitignore':
                 continue
@@ -412,7 +412,7 @@ def checkAPICallsTvdb(use=False):
 def getShowid(ShowName, UseAddic, UseOs):
     if not ShowName:
         return None,None,None
-    #AddicId = ImdbId = OsId = None
+    AddicId = ImdbId = OsId = None
     UpdateCache = False
     log.debug('getShowid: Trying to get IMDB, Addic7ed and OpenSubtitles ID for %s' %ShowName)
 
