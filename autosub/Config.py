@@ -196,12 +196,30 @@ def ReadConfig(configfile):
         else:
             autosub.ADDIC7EDPASSWD = u""
             
+ # Here we change the old "webdl" entry if it still exists for the more versitile "skipstring" entries for both languages
         if cfg.has_option("config", "webdl"):
-            autosub.WEBDL = cfg.get("config", "webdl")
+            Webdl = cfg.get("config", "webdl")
+            if Webdl == u"DutchOnly":
+                autosub.SKIPSTRINGEN = u"Web-dl"
+            elif Webdl == u"None":
+                autosub.SKIPSTRINGNL = autosub.SKIPSTRINGEN= u"Web-dl"
+            elif Webdl == u"Both":
+                autosub.SKIPSTRINGNL = autosub.SKIPSTRINGNL = []
+            cfg.remove_option("config","webdl")
+            cfg.set("config","skipstringnl",autosub.SKIPSTRINGNL)
+            cfg.set("config","skipstringen",autosub.SKIPSTRINGEN)
+            with codecs.open(autosub.CONFIGFILE, 'wb', encoding=autosub.SYSENCODING) as cfile:
+                cfg.write(cfile)
+
+        if cfg.has_option("config", "skipstringnl"):
+            autosub.SKIPSTRINGNL = cfg.get("config", "skipstringnl")
         else:
-            autosub.WEBDL = u"Both"
-        
-        
+            autosub.SKIPSTRING = u""
+
+        if cfg.has_option("config", "skipstringen"):
+            autosub.SKIPSTRINGEN = cfg.get("config", "skipstringen")
+        else:
+            autosub.SKIPSTRINGNL = u""  
     else:
         # config section is missing
         print "Config ERROR: Config section is missing. This is required, it contains vital options! Using default values instead!"
@@ -234,7 +252,7 @@ def ReadConfig(configfile):
         autosub.ADDIC7EDLANG = u"None"
         autosub.ADDIC7EDUSER = u""
         autosub.ADDIC7EDPASSWD = u""
-        autosub.WEBDL = u"Both"
+        autosub.SKIPSTRING = u""
 
     if cfg.has_section('logfile'):
         if cfg.has_option("logfile", "loglevel"):
@@ -961,7 +979,7 @@ def saveConfigSection():
     cfg.set(section, "configversion", str(autosub.CONFIGVERSION))
     cfg.set(section, "launchbrowser", str(autosub.LAUNCHBROWSER))
     cfg.set(section, "skiphiddendirs", str(autosub.SKIPHIDDENDIRS))
-    cfg.set(section, "webdl", autosub.WEBDL)
+    cfg.set(section, "skipstring", autosub.SKIPSTRING)
     cfg.set(section, "homelayoutfirst", autosub.HOMELAYOUTFIRST)
     cfg.set(section, "englishsubdelete", str(autosub.ENGLISHSUBDELETE))
     cfg.set(section, "podnapisilang", autosub.PODNAPISILANG)

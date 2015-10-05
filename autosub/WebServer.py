@@ -121,7 +121,7 @@ class Config:
         return str(tmpl)
 
     @cherrypy.expose  
-    def saveConfig(self, subeng, checksub, scandisk, skiphiddendirs, webdl, subnl, postprocesscmd, 
+    def saveConfig(self, subeng, checksub, scandisk, skiphiddendirs, skipstringnl, skipstringen,subnl, postprocesscmd, 
                    path, logfile, rootpath, launchbrowser, fallbacktoeng, downloadeng, englishsubdelete, username, 
                    password, webroot, skipshow, lognum, loglevelconsole, logsize, loglevel, 
                    webserverip, webserverport, usernamemapping, useraddic7edmapping, notifyen, notifynl, homelayoutfirst,
@@ -154,7 +154,8 @@ class Config:
         autosub.ADDIC7EDLANG = addic7edlang
         autosub.ADDIC7EDUSER = addic7eduser
         autosub.ADDIC7EDPASSWD = addic7edpasswd.replace("%","%%")
-        autosub.WEBDL = webdl
+        autosub.SKIPSTRINGNL = skipstringnl
+        autosub.SKIPSTRINGEN = skipstringen
         
         autosub.MINMATCHSCORE = 0
         if mmssource:
@@ -274,7 +275,7 @@ class Config:
         elif checkversion == 4:
             message = 'What are you doing here??? It is time to upgrade!'
         else:
-            message = 'Something went wrong there, is Google-Project reachable?<br> Or are you running a really old release?'
+            message = 'Something went wrong there, is GitHub reachable?<br> Or are you running a really old release?'
 
         tmpl = PageTemplate(file="interface/templates/home.tmpl")
         tmpl.message = message

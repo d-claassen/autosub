@@ -4,7 +4,7 @@
 #
 
 import logging
-import os
+import os,sys
 import platform
 import re
 import time
@@ -18,7 +18,17 @@ from autosub.ProcessFilename import ProcessFilename
 # Settings
 log = logging.getLogger('thelogger')
 
+
+
 def walkDir(path):
+
+    SkipListNL = []
+    SkipListEN = []
+    SkipListNL = autosub.SKIPSTRINGNL.split(",")
+    SkipListEN = autosub.SKIPSTRINGEN.split(",")
+
+    # Here we use os.walk to find all files in the path.
+    
     for dirname, dirnames, filenames in os.walk(path):
         log.debug("scanDisk: directory name: %s" %dirname)
         if re.search('_unpack_', dirname, re.IGNORECASE):
@@ -44,20 +54,14 @@ def walkDir(path):
             continue
 
         for filename in filenames:
+
             splitname = filename.split(".")
             ext = splitname[len(splitname) - 1]
 
             if ext in ('avi', 'mkv', 'wmv', 'ts', 'mp4'):
-                if re.search('sample', filename): continue
-                
-                if autosub.WEBDL == 'None':
-                    if re.search('web-dl', filename.lower()): 
-                        log.debug("scanDisk: WEB-DL is set to 'None', skipping %s" %filename)
-                        continue
-                
+                if re.search('sample', filename): continue              
                 if not platform.system() == 'Windows':
                     # Get best ascii compatible character for special characters
-
                     try:
                         if not isinstance(filename, unicode):
                             coding = detect(filename)
@@ -94,27 +98,41 @@ def walkDir(path):
                 else:
                     srtfileeng = os.path.splitext(filename)[0] + u"." + autosub.SUBENG + u".srt"
 
-                # Check which languages we want to download based on user settings.
+                # Check which languages we want to download based on user settings and check the skipstring
                 if autosub.DOWNLOADDUTCH:
-                    # If the Dutch subtitle doesn't exist, then add it to the wanted list.
-                    if not os.path.exists(os.path.join(dirname, srtfilenl)):
+                    Skipped = False
+                    for SkipItem in SkipListNL:
+                        if re.search(SkipItem.lower(), filename.lower()):
+                            Skipped = True
+                            log.debug("scanDir: %s found in %s so skipped for Dutch subs" % (SkipItem, filename))
+                            break
+                    if not Skipped and os.path.exists(os.path.join(dirname, srtfilenl)):
+                        Skipped = True
+                        log.debug("scanDir: %s skipped because the subtitle already exists" % filename) 
+
+                    # If the Dutch subtitle doesn't exist en has no skip item, then add it to the wanted list.
+                    if not Skipped: 
                         lang.append(autosub.DUTCH)
 
                 if autosub.DOWNLOADENG:
-                    # If the English subtitle doesn't exist, then add it to the wanted list.
-                    if not os.path.exists(os.path.join(dirname, srtfileeng)):
-                        if autosub.WEBDL == 'DutchOnly' and re.search('web-dl', filename.lower()):
-                            log.debug("scanDisk: WEB-DL is set to 'Dutch Only', not adding English as wanted for %s" %filename)
-                        else:
-                            lang.append(autosub.ENGLISH)
+                    Skipped = False
+                    for SkipItem in SkipListEN:
+                        if re.search(SkipItem.lower(), filename.lower()):
+                            Skipped = True
+                            log.debug("scanDir: %s found in %s so skipped for English subs" % (SkipItem, filename))
+                            break
+                    if not Skipped and os.path.exists(os.path.join(dirname, srtfileeng)):
+                        Skipped = True
+                        log.debug("scanDir: %s skipped because the subtitle already exists" % filename) 
 
-                if (autosub.FALLBACKTOENG and autosub.DOWNLOADDUTCH) and not autosub.DOWNLOADENG:
-                    # If the Dutch and English subtitles do not exist, then add English to the wanted list.
+                    # If the English subtitle doesn't exist en has no skip item, then add it to the wanted list.
+                    if not Skipped: 
+                        lang.append(autosub.ENGLISH)
+
+                if (autosub.FALLBACKTOENG and autosub.DOWNLOADDUTCH) and not autosub.DOWNLOADENG and not Skipped:
+                    # If the Dutch and English subtitles do not exist and not skipped, then add English to the wanted list.
                     if not os.path.exists(os.path.join(dirname, srtfilenl)) and not os.path.exists(os.path.join(dirname, srtfileeng)):
-                        if autosub.WEBDL == 'DutchOnly' and re.search('web-dl', filename.lower()):
-                            log.debug("scanDisk: WEB-DL is set to 'Dutch Only', not adding English as wanted for %s" %filename)
-                        else:
-                            lang.append(autosub.ENGLISH)
+                        lang.append(autosub.ENGLISH)
 
                 if not lang:
                     # autosub.WANTEDQUEUE empty
