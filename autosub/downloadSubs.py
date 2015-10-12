@@ -245,23 +245,28 @@ def DownloadSub(allResults, a7Response, downloadItem):
         log.debug("downloadSubs: No suitable subtitle was found")
         return False
     
-    #Lets first download the subtitle to a tempfile and then write it to the destination
-    tmpfile = tempfile.TemporaryFile('w+b')
-        
-    try:
-        tmpfile.write(fileStringIO.getvalue())
-        tmpfile.write('\n') #If subtitle has some footer which doesn't have a line feed >.>
-        tmpfile.seek(0) #Return to the start of the file
-    except:
-        log.error("downloadSubs: Error while downloading subtitle %s. Subtitle might be corrupt %s." % (destsrt, website))
-
-    try:
-        log.debug("downloadSubs: Trying to save the subtitle to the filesystem")
-        open(destsrt, 'wb').write(tmpfile.read())
-        tmpfile.close()
-    except IOError:
-        log.error("downloadSubs: Could not write subtitle file. Permission denied? Enough diskspace?")
-        tmpfile.close()
+    #Check to see whether it is a correct subtitle file bij reading the first lines and checking the formatting. 
+    SubOk = False
+    for linecnt in range (1,5):
+        Line = fileStringIO.readline()
+        if Line[:1] == '1':
+            Line = fileStringIO.readline()
+            if re.match("\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}",Line):          
+                try:
+                    log.debug("downloadSubs: Trying to save the subtitle to the filesystem")
+                    fileStringIO.seek(0)
+                    fp = open(destsrt, 'wb')
+                    fp.write(fileStringIO.getvalue())
+                    fp.write('\n') 
+                    fp.close()
+                    SubOk = True
+                    fileStringIO.close()
+                    break
+                except IOError as error :
+                    log.error("downloadSubs: Could not write subtitle file. %s" % error.strerror)
+    if not SubOk:
+        fileStringIO.close()
+        log.error("downloadSubs: Downloaded file %s is not a correct .srt file. Skipping it." % destsrt)
         return False
         
     log.info("downloadSubs: DOWNLOADED: %s" % destsrt)
