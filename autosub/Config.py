@@ -214,12 +214,12 @@ def ReadConfig(configfile):
         if cfg.has_option("config", "skipstringnl"):
             autosub.SKIPSTRINGNL = cfg.get("config", "skipstringnl")
         else:
-            autosub.SKIPSTRING = u""
+            autosub.SKIPSTRINGNL = u""
 
         if cfg.has_option("config", "skipstringen"):
             autosub.SKIPSTRINGEN = cfg.get("config", "skipstringen")
         else:
-            autosub.SKIPSTRINGNL = u""  
+            autosub.SKIPSTRINGEN = u""  
     else:
         # config section is missing
         print "Config ERROR: Config section is missing. This is required, it contains vital options! Using default values instead!"
@@ -252,9 +252,10 @@ def ReadConfig(configfile):
         autosub.ADDIC7EDLANG = u"None"
         autosub.ADDIC7EDUSER = u""
         autosub.ADDIC7EDPASSWD = u""
-        autosub.SKIPSTRING = u""
+        autosub.SKIPSTRINGNL = u""
+        autosub.SKIPSTRINGEN = u""
 
-    if cfg.has_section('logfile'):
+        if cfg.has_section('logfile'):
         if cfg.has_option("logfile", "loglevel"):
             autosub.LOGLEVEL = cfg.get("logfile", "loglevel")
             if autosub.LOGLEVEL.lower() == u'error':
@@ -979,7 +980,8 @@ def saveConfigSection():
     cfg.set(section, "configversion", str(autosub.CONFIGVERSION))
     cfg.set(section, "launchbrowser", str(autosub.LAUNCHBROWSER))
     cfg.set(section, "skiphiddendirs", str(autosub.SKIPHIDDENDIRS))
-    cfg.set(section, "skipstring", autosub.SKIPSTRING)
+    cfg.set(section, "skipstringnl", autosub.SKIPSTRINGNL)
+    cfg.set(section, "skipstringen", autosub.SKIPSTRINGEN)
     cfg.set(section, "homelayoutfirst", autosub.HOMELAYOUTFIRST)
     cfg.set(section, "englishsubdelete", str(autosub.ENGLISHSUBDELETE))
     cfg.set(section, "podnapisilang", autosub.PODNAPISILANG)
