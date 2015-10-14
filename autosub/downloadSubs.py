@@ -20,7 +20,7 @@ import tempfile
 import autosub
 
 from autosub.Db import lastDown
-from autosub.OpenSubtitles import TimeOut
+import autosub.OpenSubtitles as OS
 import autosub.notify as notify
 import autosub.Helpers
 
@@ -71,9 +71,21 @@ def unzip(url):
 def openSubtitles(DownloadPage):
 
     log.debug("OpenSubtitles: DownloadPage: %s" % DownloadPage)
+    # To prevent Captcha's from opensubtitles after every 25e dowload we do this:
+    # Logout from opensubtiles
+    # break the connection
+    # wait one minute
+    # Login again in the website
 
+    if autosub.OPENSUBTILESDLCNT > 25:
+        Referer = autosub.OPENSUBTTITLESSESSION.headers['referer']
+        OS.OpenSubtitlesLogout()
+        OS.TimeOut(60)
+        OS.OpenSubtitlesLogin()
+        autosub.OPENSUBTILESDLCNT = 0
+        autosub.OPENSUBTTITLESSESSION.headers.update({'referer': Referer})
     try:
-        TimeOut()
+        OS.TimeOut()
         RequestResult = autosub.OPENSUBTTITLESSESSION.get(DownloadPage, timeout=10)
         autosub.OPENSUBTTITLESSESSION.headers.update({'referer': DownloadPage})
     except:
@@ -94,7 +106,7 @@ def openSubtitles(DownloadPage):
         return None
     try:
         DownloadUrl = autosub.OPENSUBTITLESDL + DownloadId
-        TimeOut()
+        OS.TimeOut()
         RequestResult = autosub.OPENSUBTTITLESSESSION.get( DownloadUrl, timeout=10)
         autosub.OPENSUBTTITLESSESSION.headers.update({'referer': DownloadUrl})
     except:
@@ -175,6 +187,60 @@ def addic7ed(url):
         return StringIO(subtitleFile)
     return None
 
+def GetSubFile(StringSub,FileSub):
+# this routine tries to download the sub and check if it is a correct sub
+# this is done by reading the first lines (max 5) and check the line format
+    SubOk = False
+    for Count in range (1,5):
+        Line = StringSub.readline()
+        if Line[:1] == '1':
+            Line = StringSub.readline()
+            if re.match("\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}",Line):          
+                try:
+                    log.debug("downloadSubs: Saving the subtitle file %s to the filesystem." % FileSub)
+                    StringSub.seek(0)
+                    fp = open(FileSub, 'wb')
+                    fp.write(StringSub.getvalue())
+                    fp.write('\n') 
+                    fp.close()
+                    SubOk = True
+                    StringSub.close()
+                    break
+                except IOError as error :
+                    log.error("downloadSubs: Could not write subtitle file. %s" % error.strerror)
+    if not SubOk:
+        StringSub.close()
+        return False
+    else:
+        return True
+
+def GetSubFile(StringSub,FileSub):
+# this routine tries to download the sub and check if it is a correct sub
+# this is done by reading the first lines (max 5) and check the line format
+    SubOk = False
+    for Count in range (1,5):
+        Line = StringSub.readline()
+        if Line[:1] == '1':
+            Line = StringSub.readline()
+            if re.match("\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}",Line):          
+                try:
+                    log.debug("downloadSubs: Saving the subtitle file %s to the filesystem." % FileSub)
+                    StringSub.seek(0)
+                    fp = open(FileSub, 'wb')
+                    fp.write(StringSub.getvalue())
+                    fp.write('\n') 
+                    fp.close()
+                    SubOk = True
+                    StringSub.close()
+                    break
+                except IOError as error :
+                    log.error("downloadSubs: Could not write subtitle file. %s" % error.strerror)
+    if not SubOk:
+        StringSub.close()
+        return False
+    else:
+        return True
+
 def DownloadSub(allResults, a7Response, downloadItem):    
     
     log.debug("downloadSubs: Starting DownloadSub function")    
@@ -195,7 +261,7 @@ def DownloadSub(allResults, a7Response, downloadItem):
     
     HIfallback = {}
     fileStringIO = None
-        
+    Downloaded = False 
     for result in allResults:   
         url = result['url']
         release = result['releasename']
@@ -215,7 +281,6 @@ def DownloadSub(allResults, a7Response, downloadItem):
         elif website == 'opensubtitles.org':
             log.debug("downloadSubs: Scraper for opensubtitles.org is chosen for subtitle %s" % destsrt)
             fileStringIO = openSubtitles(url)
-            time.sleep(6)
         elif website == 'addic7ed.com' and a7Response:
             log.debug("downloadSubs: Scraper for Addic7ed.com is chosen for subtitle %s" % destsrt)
             if result['HI']:
@@ -226,51 +291,39 @@ def DownloadSub(allResults, a7Response, downloadItem):
             fileStringIO = addic7ed(url)   
         else:
             log.error("downloadSubs: %s is not recognized. Something went wrong!" % website)
-
         if fileStringIO:
             log.debug("downloadSubs: Subtitle is downloading from %s" % website)      
-            break
-   
-        log.debug("downloadSubs: Trying to download another subtitle for this episode")
-    
-    
-    if not fileStringIO:
-        if HIfallback:
-            log.debug("downloadSubs: Downloading HI subtitle as fallback")
-            fileStringIO = addic7ed(url)
-            release = HIfallback['releasename']
-            website = HIfallback['website']
-        else: return False
-    if not fileStringIO: 
-        log.debug("downloadSubs: No suitable subtitle was found")
-        return False
-    
-    #Check to see whether it is a correct subtitle file bij reading the first lines and checking the formatting. 
-    SubOk = False
-    for linecnt in range (1,5):
-        Line = fileStringIO.readline()
-        if Line[:1] == '1':
-            Line = fileStringIO.readline()
-            if re.match("\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}",Line):          
-                try:
-                    log.debug("downloadSubs: Trying to save the subtitle to the filesystem")
-                    fileStringIO.seek(0)
-                    fp = open(destsrt, 'wb')
-                    fp.write(fileStringIO.getvalue())
-                    fp.write('\n') 
-                    fp.close()
-                    SubOk = True
-                    fileStringIO.close()
+            if not GetSubFile(fileStringIO,destsrt):
+                if website == 'opensubtitles.org':
+                    log.error("downloadSubs: Downloaded file from opensubtitles is not a sub file, try to avoid Captcha")
+                    Referer = autosub.OPENSUBTTITLESSESSION.headers['referer']
+                    OS.OpenSubtitlesLogout()
+                    OS.TimeOut(60)
+                    OS.OpenSubtitlesLogin()
+                    autosub.OPENSUBTTITLESSESSION.headers.update({'referer': Referer})
+                    if not GetSubFile(fileStringIO,destsrt):
+                        log.error("downloadSubs: Downloaded file is still not a correct .srt file. Skipping it!")
+                else:
+                    log.error("downloadSubs: Sub from %s not a correct .srt file. Skipping it." % website)
+            else:
+                Downloaded = True
+                log.info("downloadSubs: Subtitle %s is downloaded from %s" % (destsrt,website))
+                break
+        else:
+            if HIfallback:
+                log.debug("downloadSubs: Downloading HI subtitle as fallback")
+                fileStringIO = addic7ed(url)
+                if not GetSubFile(fileStringIO,destsrt):
+                    log.error("downloadSubs: Hearing impact sub from %s not a correct .srt file. Skipping it." % website)
+                else:
+                    Downloaded = True
+                    release = HIfallback['releasename']
+                    website = HIfallback['website']
                     break
-                except IOError as error :
-                    log.error("downloadSubs: Could not write subtitle file. %s" % error.strerror)
-    if not SubOk:
-        fileStringIO.close()
-        log.error("downloadSubs: Downloaded file %s is not a correct .srt file. Skipping it." % destsrt)
+    if not Downloaded:
+        log.error("downloadSubs: Could not download a correct subtitle file for %s" % destsrt)
         return False
-        
-    log.info("downloadSubs: DOWNLOADED: %s" % destsrt)
-        
+
     downloadItem['subtitle'] = "%s downloaded from %s" % (release,website)
     downloadItem['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
     

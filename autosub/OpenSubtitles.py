@@ -13,11 +13,10 @@ import logging
 
 log = logging.getLogger('thelogger')
 
-def TimeOut():
-    TimeOut = time.time() - autosub.OPENSUBTITLESTIME
-    TimeOut = 7 - TimeOut
-    if TimeOut > 0 :
-        time.sleep(TimeOut)
+def TimeOut(WaitTime = 7):
+    ActualWait = WaitTime - (time.time() - autosub.OPENSUBTITLESTIME)
+    if ActualWait > 0 :
+        time.sleep(ActualWait)
     autosub.OPENSUBTITLESTIME = time.time()
 
 def OpenSubtitlesLogin(opensubtitlesusername=None,opensubtitlespasswd=None):
@@ -43,12 +42,11 @@ def OpenSubtitlesLogin(opensubtitlesusername=None,opensubtitlespasswd=None):
         return False
 
     autosub.OPENSUBTTITLESSESSION = requests.Session()
-    autosub.OPENSUBTTITLESSESSION.headers = {'User-Agent': 'Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0;  rv:11.0) like Gecko'}
-    autosub.OPENSUBTTITLESSESSION.headers.update({'referer': autosub.OPENSUBTITLESURL})
+    autosub.OPENSUBTTITLESSESSION.headers = {'User-Agent': 'Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0;  rv:11.0) like Gecko','referer': autosub.OPENSUBTITLESURL}
 
     try:
         TimeOut()
-        RequestResult = autosub.OPENSUBTTITLESSESSION.post(autosub.OPENSUBTITLESURL + '/login', data, timeout=10)
+        RequestResult = autosub.OPENSUBTTITLESSESSION.post(autosub.OPENSUBTITLESURL + '/login', data,timeout=10)
     except:
         log.debug('OpenSubtitlesLogin: Login post request exception.')
         autosub.OPENSUBTITLESLOGGED_IN = False
@@ -72,10 +70,12 @@ def OpenSubtitlesLogin(opensubtitlesusername=None,opensubtitlespasswd=None):
     try:
         if root.find('.//logged_as').text == data['user']:
             autosub.OPENSUBTITLESLOGGED_IN = True
+            Rank = root.find('.//top_user_rank').text
+            log.info("OpenSubtitlesLogin: Logged in as %s with rank: %s" %( data['user'], Rank))
             return True
     except:
         pass
-    log.error('OpenSubtitlesLogin: Login of User %s failed' % data['user'])
+    log.info('OpenSubtitlesLogin: Login of User %s failed' % data['user'])
     autosub.OPENSUBTITLESLOGGED_IN = False
     return False
 
@@ -89,10 +89,11 @@ def OpenSubtitlesLogout():
             log.debug('OpenSubtitlesLogout: Logout failed exception is: %s' %e)
             return False
         try:
-            autosub.OPENSUBTTITLESSESSION.headers.update({'referer': autosub.OPENSUBTITLESURL})
+            autosub.OPENSUBTTITLESSESSION.headers.update({'Connection':'close'})
             TimeOut()
-            RequestResult = autosub.OPENSUBTTITLESSESSION.get(autosub.OPENSUBTITLESURL + '/xml', timeout=10)
+            RequestResult = autosub.OPENSUBTTITLESSESSION.get(autosub.OPENSUBTITLESURL + '/xml',timeout=10)
             root = ET.fromstring(RequestResult.content)
+            autosub.OPENSUBTTITLESSESSION.close()
         except:
             return False
         try:
@@ -119,10 +120,12 @@ def GetEpisodeId(OsShowId, Season, Episode):
     Return Value:
     Episode Imdb Id of the Episode 
     """
-    #First we try the cache
-    
+    # First we try the cache
+    # if found in the cache we return it and set the referer correct
     FoundEpisodeId = EpisodeIdCache().getId(OsShowId, Season, Episode)
     if FoundEpisodeId:
+        SearchUrl = autosub.OPENSUBTITLESURL + '/xml/ssearch/sublanguageid-all/idmovie-' + str(OsShowId)
+        autosub.OPENSUBTTITLESSESSION.headers.update({'referer': SearchUrl.replace('/xml','')})
         return FoundEpisodeId
 
     # Episode is not in cache now we try the Opensubtitles website
@@ -131,8 +134,7 @@ def GetEpisodeId(OsShowId, Season, Episode):
     try:
         TimeOut()
         RequestResult = autosub.OPENSUBTTITLESSESSION.get(SearchUrl, timeout=10)
-        Referer = SearchUrl.replace('/xml','')
-        autosub.OPENSUBTTITLESSESSION.headers.update({'referer': Referer})
+        autosub.OPENSUBTTITLESSESSION.headers.update({'referer': SearchUrl.replace('/xml','')})
     except:
         log.debug('GetEpisodeImdb: Could not connect to Opensubtitles.')
         return None
@@ -169,19 +171,19 @@ def GetEpisodeId(OsShowId, Season, Episode):
     return FoundEpisodeId
 
 def GetOpensubtitlesId(ImdbId, ShowName):
-    # First we try to find the Opensubtitles Id via the Imdb Id
+    # here we try to find the Opensubtitles Id of the show via the Imdb Id or the showname
     SearchUrls=[]
     SearchUrls.append(autosub.OPENSUBTITLESURL + '/xml/search/sublanguageid-all/searchonlytvseries-on/imdbid-tt' + str(ImdbId))
     SearchUrls.append(autosub.OPENSUBTITLESURL + '/xml/search2/sublanguageid-dut/searchonlytvseries-on/moviename-' + str(ShowName))
     OpenSubTitlesId = ImdbIdFound = None
-    # first we try the direct serie with the Imdb Id
+    # first we try to find the serie via the Imdb Id
     # if this fails we try it via a name search
     autosub.OPENSUBTTITLESSESSION.headers.update({'referer': autosub.OPENSUBTITLESURL})
     for SearchUrl in SearchUrls:
         try:
             TimeOut()
             RequestResult = autosub.OPENSUBTTITLESSESSION.get(SearchUrl, timeout=10)
-            Referer = SearchUrl.replace('/xml','')
+            autosub.OPENSUBTTITLESSESSION.headers.update({'referer': SearchUrl.replace('/xml','')})
         except:
             log.error('GetOpensubtitlesId: Could not connect to OpenSubtitles.')
             return None
@@ -207,7 +209,6 @@ def GetOpensubtitlesId(ImdbId, ShowName):
                 continue
         if OpenSubTitlesId:
             break
-    autosub.OPENSUBTTITLESSESSION.headers.update({'referer': Referer})
     if not OpenSubTitlesId:
         log.debug('GetOpensubtitlesId: Serie %s - IMDB ID %s could not be found on OpenSubtitles.' %(ShowName,ImdbId))
         return None
