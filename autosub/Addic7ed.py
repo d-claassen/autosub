@@ -32,13 +32,13 @@ _show = [re.compile('(.+)\s+\(?(\d{4})\)?', re.IGNORECASE),
               re.compile('(.+)\s+\(?(bbc)\)?', re.IGNORECASE)]
 
 
-_source = [re.compile("(ahdtv|hdtv|web[. _-]*dl|blu[. _-]*ray|dvdrip|web[-]*rip|hddvd)", re.IGNORECASE),
+_source = [re.compile("(ahdtv|hdtv|hd_tv|web[. _-]*dl|blu[. _-]*ray|dvdrip|web[-]*rip|hddvd)", re.IGNORECASE),
           re.compile("(dvd|bdrip|web)", re.IGNORECASE)]
 
 #A dictionary containing as keys, the nonstandard naming. Followed by there standard naming.
 #Very important!!! Should be unicode and all LOWERCASE!!!
 _source_syn = {u'ahdtv'  : u'hdtv',
-               u'hd_tv'  : u'hdtv',
+               u'hd-tv'  : u'hdtv',
                u'dvd'    : u'dvdrip',
                u'bdrip'  : u'bluray',
                u'blu-ray': u'bluray',

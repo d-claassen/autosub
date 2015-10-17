@@ -20,13 +20,13 @@ episode_regex = [re.compile("(s\d+[x. _-]*e\d+|\d+x\d+)", re.IGNORECASE)]
 #The second (and following) regex contains nonstandard naming (either typo's or other renaming tools (like sickbeard)) 
 #Nonstandard naming should be renamed using the syn dictionary. 
 
-source = [re.compile("(ahdtv|hdtv|web[. _-]*dl|blu[. _-]*ray|dvdrip|web[-]*rip|hddvd)", re.IGNORECASE),
+source = [re.compile("(ahdtv|hdtv|hd_tv|web[. _-]*dl|blu[. _-]*ray|dvdrip|web[-]*rip|hddvd)", re.IGNORECASE),
           re.compile("(dvd|bdrip|web)", re.IGNORECASE)]
 
 #A dictionary containing as keys, the nonstandard naming. Followed by there standard naming.
 #Very important!!! Should be unicode and all LOWERCASE!!!
 source_syn = {u'ahdtv'  : u'hdtv',
-              u'hd_tv'  : u'hdtv',
+              u'hd-tv'  : u'hdtv',
               u'dvd'    : u'dvdrip',
               u'bdrip'  : u'bluray',
               u'blu-ray': u'bluray',
