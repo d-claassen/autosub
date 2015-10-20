@@ -1,5 +1,15 @@
 /* Sticky footer styles
 -------------------------------------------------- */
+.page-header {
+  padding-bottom: 2px;
+  margin: 20px 0 20px;
+  border-bottom: 1px solid #eeeeee;
+}
+@font-face {
+  font-family: 'Glyphicons Halflings';
+  src: url('../images/glyphicons-halflings-regular.eot');
+  src: url('../images/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../images/glyphicons-halflings-regular.woff') format('woff'), url('../images/glyphicons-halflings-regular.ttf') format('truetype'), url('../images/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
+}
 
 html,
 body {
@@ -131,10 +141,65 @@ code {
 */
 
 /* Wanted & Downloaded custom dropdown height */
+.nav > li > a:focus {
+  text-decoration: none;
+  background-color: transparent;
+}
+.navbar-collapse {
+  max-height: 340px;
+  background-color: #5b96d1;
+  background: rgb(120,177,237); /* Old browsers */
+  background: -moz-linear-gradient(top,  rgba(120,177,237,1) 0%, rgba(65,123,181,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(120,177,237,1)), color-stop(100%,rgba(65,123,181,1))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  rgba(120,177,237,1) 0%,rgba(65,123,181,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  rgba(120,177,237,1) 0%,rgba(65,123,181,1) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  rgba(120,177,237,1) 0%,rgba(65,123,181,1) 100%); /* IE10+ */
+  background: linear-gradient(top,  rgba(120,177,237,1) 0%,rgba(65,123,181,1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#78b1ed', endColorstr='#417bb5',GradientType=0 ); /* IE6-9 */
+  background-repeat: repeat-x;
+  border-color: #252525;
+}
+.navbar-default .navbar-brand {
+  color: #FFFFFF;
+}
+.navbar-default .navbar-text {
+  color: #FFFFFF;
+}
+
+.navbar-default .navbar-nav > li > a {
+  color: #FFFFFF;
+}
+.navbar-default .navbar-nav > .open > a:focus {
+  color: #555555;
+  background-color: transparent;
+}
+@media (max-width: 767px) {
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+    color: #FFFFFF;
+	background-color: transparent;
+  }
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover,
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+    color: #333333;
+    background-color: transparent;
+  }
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a,
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover,
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus {
+    color: #555555;
+    background-color: transparent;
+  }
+  .navbar-default .navbar-nav .open .dropdown-menu > .disabled > a,
+  .navbar-default .navbar-nav .open .dropdown-menu > .disabled > a:hover,
+  .navbar-default .navbar-nav .open .dropdown-menu > .disabled > a:focus {
+    color: #cccccc;
+    background-color: transparent;
+  }
+}
 
 .navbar-collapse.skipshow {
 	margin-bottom: 15px;
-	margin-right: 10px;
+	margin-right: 15px;
 	padding: 0px 0px;
 	height: 0px;
 	overflow: visible;
@@ -153,6 +218,9 @@ code {
 	text-align: center;
 	margin-left: auto;
 	margin-right: auto;
+}
+.tooltip-inner {
+  max-width: 700px;
 }
 
 /* Change font for the well headers. */

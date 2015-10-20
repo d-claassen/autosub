@@ -92,7 +92,7 @@ $autosub.WANTEDQUEUE.sort(key=$getAttr('title'))
 			<td>
 #set $SE = "S" + $var['season'] + "E" + $var['episode']		
 			<div class="navbar-collapse skipshow">
-			  <ul class="nav navbar-right">
+			  <ul class="nav navbar-center">
 				<li class="dropdown">
 					  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-wrench"></span></a>
 					  <ul class="dropdown-menu">
@@ -199,16 +199,16 @@ $autosub.WANTEDQUEUE.sort(key=$getAttr('title'))
 #if $var['destination']:
 #if $os.path.isfile($var['destination']):
 				<td>
-					<a style="cursor: default;"><span id="popover" data-toggle="popover" data-trigger="click" data-html="true" data-placement="left" title="<strong>Subtitle Preview</strong><br>$var['show_name']" data-content="$DisplaySubtitle($var['destination'])"><span class="glyphicon glyphicon-eye-open"></span></span></a>
+					<a style="cursor: pointer;"><span id="popover" data-toggle="popover" data-trigger="click" data-html="true" data-placement="left" title="<strong>Subtitle Preview</strong><br>$var['show_name']" data-content="$DisplaySubtitle($var['destination'])"><span class="glyphicon glyphicon-eye-open"></span></span></a>
 				</td>
 #else:
 				<td>
-					<a style="cursor: default;"><span id="popover" data-toggle="popover" data-trigger="click" data-html="true" data-placement="left" title="<strong>Subtitle Preview</strong><br>$var['show_name']" data-content="Preview is not available.<br>You probably moved the file."><span class="glyphicon glyphicon-eye-close"></span></span></a>
+					<a style="cursor: pointer;"><span id="popover" data-toggle="popover" data-trigger="click" data-html="true" data-placement="left" title="<strong>Subtitle Preview</strong><br>$var['show_name']" data-content="Preview is not available.<br>You probably moved the file."><span class="glyphicon glyphicon-eye-close"></span></span></a>
 				</td>
 #end if
 #else:
 				<td>
-					<a style="cursor: default;"><span id="popover" data-toggle="popover" data-trigger="click" data-html="true" data-placement="left" title="<strong>Subtitle Preview</strong><br>$var['show_name']" data-content="Preview is not available.<br>You probably moved the file."><span class="glyphicon glyphicon-eye-close"></span></span></a>
+					<a style="cursor: pointer;"><span id="popover" data-toggle="popover" data-trigger="click" data-html="true" data-placement="left" title="<strong>Subtitle Preview</strong><br>$var['show_name']" data-content="Preview is not available.<br>You probably moved the file."><span class="glyphicon glyphicon-eye-close"></span></span></a>
 				</td>
 #end if
 			</tr>	
