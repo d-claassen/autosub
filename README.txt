@@ -5,12 +5,14 @@ README
      +--- Uses SubtitleSeeker API, supporting the following website:
      |    +--- Podnapisi
      |    +--- Subscene
-     |    +--- OpenSubtitles
      |    \--- Undertexter
      |
      +--- Addic7ed support.
      |    +--- Requires account.
      |    \--- Limited downloads per 24 hours. (Regular: 30 - VIP: 55)
+     |
+     +--- OpenSubtitles support
+     |    +--- Requires account.
      |
      +--- Notifications
      |    +--- Windows & Windows Phone
