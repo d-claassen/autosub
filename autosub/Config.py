@@ -255,7 +255,7 @@ def ReadConfig(configfile):
         autosub.SKIPSTRINGNL = u""
         autosub.SKIPSTRINGEN = u""
 
-        if cfg.has_section('logfile'):
+    if cfg.has_section('logfile'):
         if cfg.has_option("logfile", "loglevel"):
             autosub.LOGLEVEL = cfg.get("logfile", "loglevel")
             if autosub.LOGLEVEL.lower() == u'error':
