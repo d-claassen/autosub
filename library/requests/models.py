@@ -192,7 +192,7 @@ class Request(RequestHooksMixin):
     :param headers: dictionary of headers to send.
     :param files: dictionary of {filename: fileobject} files to multipart upload.
     :param data: the body to attach to the request. If a dictionary is provided, form-encoding will take place.
-    :param json: json for the body to attach to the request (if data is not specified).
+    :param json: json for the body to attach to the request (if files or data is not specified).
     :param params: dictionary of URL parameters to append to the URL.
     :param auth: Auth handler or (user, pass) tuple.
     :param cookies: dictionary or CookieJar of cookies to attach to this request.
@@ -319,7 +319,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         """Prepares the given HTTP method."""
         self.method = method
         if self.method is not None:
-            self.method = self.method.upper()
+            self.method = to_native_string(self.method.upper())
 
     def prepare_url(self, url, params):
         """Prepares the given HTTP URL."""
@@ -414,7 +414,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         content_type = None
         length = None
 
-        if json is not None:
+        if not data and json is not None:
             content_type = 'application/json'
             body = complexjson.dumps(json)
 
@@ -443,7 +443,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             if files:
                 (body, content_type) = self._encode_files(files, data)
             else:
-                if data and json is None:
+                if data:
                     body = self._encode_params(data)
                     if isinstance(data, basestring) or hasattr(data, 'read'):
                         content_type = None
