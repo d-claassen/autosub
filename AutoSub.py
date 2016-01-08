@@ -51,7 +51,7 @@ def main(argv=None):
     # for OSes that are poorly configured, like synology & slackware
     if not autosub.SYSENCODING or autosub.SYSENCODING in ('ANSI_X3.4-1968', 'US-ASCII', 'ASCII'):
         autosub.SYSENCODING = 'UTF-8'
-    
+    UpdateCount = 0
     if argv is None:
         argv = sys.argv
     try:
