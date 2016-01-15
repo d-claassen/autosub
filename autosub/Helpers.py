@@ -418,11 +418,10 @@ def getShowid(ShowName, UseAddic, UseOs):
 
     ImdbNameMappingId = nameMapping(ShowName)
     if ImdbNameMappingId:
-        # Check whether the Namemapping is an existing Imdb Id and if so find the official showname
-        TvdbShowName = Tvdb.getShowName(ImdbNameMappingId)
-        if TvdbShowName:
-            ImdbId = ImdbNameMappingId
-            UpdateCache = True
+        # Trust ShowName is the official showname
+        TvdbShowName = ShowName
+        ImdbId = ImdbNameMappingId
+        UpdateCache = True
     else:
         # No mapping we try the cache
         ImdbId, AddicId, OsId = idCache().getId(ShowName)
